@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>talkweave</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cpath d='M3 11 C 8 11, 10 21, 16 21 S 24 11, 29 16' fill='none' stroke='%23ffb84d' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M3 21 C 8 21, 10 11, 16 11 S 24 21, 29 16' fill='none' stroke='%23f2efe9' stroke-width='2.4' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E'http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ffb84d'/%3E%3C/svg%3E">
+<meta name="description" content="talkweave augments a live two-person conversation without interfering. flag a point the instant it's made, fact-check it locally, never lose the thread.">
+<style>
+  :root{
+    --black:#000000;
+    --ink:#e8e8e4;
+    --ink-dim:#9a9a96;
+    --ink-faint:#5c5c59;
+    --amber:#ffb84d;
+    --amber-wash:rgba(255,184,77,.12);
+    --amber-wash-strong:rgba(255,184,77,.22);
+    --line:#232323;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  html,body{height:100%;}
+  body{
+    background:var(--black);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--amber);color:#000;}
+
+  a{color:var(--amber);text-decoration-color:rgba(255,184,77,.4);text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--amber);}
+
+  button{
+    font:inherit;
+    color:inherit;
+    background:none;
+    border:none;
+    cursor:pointer;
+  }
+
+  :focus-visible{outline:2px solid var(--amber);outline-offset:3px;}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:0 clamp(20px,5vw,32px);}
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:rgba(0,0,0,.86);
+    backdrop-filter:saturate(140%) blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:1100px;margin:0 auto;padding:16px clamp(20px,5vw,32px);
+    display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  }
+  /* The wordmark used to be bold monospace with an amber full stop, which read
+     as a code sample rather than as a mark. Two threads that cross and leave
+     as one line say what the product is without a word of explanation. */
+  .mark{
+    display:inline-flex;align-items:center;gap:9px;
+    text-decoration:none;color:inherit;
+  }
+  .mark-word{
+    font-family:ui-sans-serif,-apple-system,"SF Pro Text",Inter,system-ui,sans-serif;
+    font-weight:450;
+    font-size:1.06rem;
+    letter-spacing:.055em;
+  }
+  .mark-weave{overflow:visible;flex:none;}
+  .mark-weave .thread{
+    fill:none;
+    stroke-width:1.6;
+    stroke-linecap:round;
+    vector-effect:non-scaling-stroke;
+  }
+  .mark-weave .thread-a{stroke:var(--amber);opacity:.95;}
+  .mark-weave .thread-b{stroke:currentColor;opacity:.5;}
+  .mark-weave .thread-seed{fill:var(--amber);}
+  .mark:hover .thread-b{opacity:.8;}
+
+  /* The threads draw themselves once on load, slowly enough to read as
+     breathing rather than as a loading spinner. */
+  @media (prefers-reduced-motion:no-preference){
+    .mark-weave .thread{
+      stroke-dasharray:60;
+      stroke-dashoffset:60;
+      animation:weave-in 1.6s cubic-bezier(.22,.61,.36,1) forwards;
+    }
+    .mark-weave .thread-b{animation-delay:.18s;}
+    .mark-weave .thread-seed{opacity:0;animation:seed-in .5s ease forwards 1.5s;}
+  }
+  @keyframes weave-in{to{stroke-dashoffset:0;}}
+  @keyframes seed-in{to{opacity:1;}}
+  .topbar-tag{font-family:var(--mono);font-size:.72rem;color:var(--ink-dim);letter-spacing:.02em;}
+
+  /* ---------- section rhythm ---------- */
+  section{padding:clamp(56px,10vw,104px) 0;}
+  .divider{border:none;border-top:1px solid var(--line);}
+  .eyebrow{
+    font-family:var(--mono);font-size:.72rem;color:var(--amber);
+    letter-spacing:.08em;margin-bottom:14px;display:block;
+  }
+  h2{font-size:clamp(1.4rem,3vw,1.9rem);font-weight:700;letter-spacing:-.01em;margin-bottom:20px;max-width:34ch;}
+  .lede{color:var(--ink-dim);max-width:56ch;font-size:1.02rem;margin-bottom:36px;}
+
+  /* ---------- hero: the page opens as a transcript ---------- */
+  .hero{padding-top:clamp(40px,8vw,72px);}
+  .hero-top{max-width:640px;margin:0 auto 48px;text-align:center;}
+  .hero-title{
+    font-size:clamp(1.9rem,5vw,3.1rem);
+    font-weight:800;
+    line-height:1.12;
+    letter-spacing:-.02em;
+  }
+  .hero-title .amber{color:var(--amber);}
+  .hero-sub{margin-top:16px;color:var(--ink-dim);font-size:1.05rem;max-width:46ch;margin-left:auto;margin-right:auto;}
+
+  .transcript-grid{
+    display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:56px;align-items:start;
+  }
+
+  .transcript{max-width:none;}
+  .t-timestamp{
+    font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);
+    text-align:center;margin-bottom:28px;letter-spacing:.06em;
+  }
+
+  .line{
+    max-width:76%;
+    margin-bottom:26px;
+    font-size:1.06rem;
+    position:relative;
+  }
+  .line.left{margin-right:auto;text-align:left;}
+  .line.right{margin-left:auto;text-align:right;}
+  .line .who{
+    display:block;font-family:var(--mono);font-size:.66rem;color:var(--ink-faint);
+    letter-spacing:.08em;margin-bottom:5px;
+  }
+  .line.right .who{text-align:right;}
+
+  [data-flaggable]{
+    cursor:pointer;
+    border-radius:3px;
+    padding:6px 8px;
+    margin:-6px -8px;
+    transition:background-color .15s ease, color .15s ease;
+  }
+  [data-flaggable]:hover{background:var(--amber-wash);}
+  [data-flaggable] .hint{
+    display:block;font-family:var(--mono);font-size:.68rem;color:var(--amber);
+    margin-top:6px;letter-spacing:.02em;opacity:.85;
+  }
+  .line.right [data-flaggable] .hint{text-align:right;}
+  [data-flaggable].flagged{
+    background:var(--amber-wash-strong);
+    color:var(--amber);
+  }
+  [data-flaggable].flagged .hint{display:none;}
+  [data-flaggable].flagged::after{
+    content:"flagged \25B8";
+    display:block;font-family:var(--mono);font-size:.66rem;
+    color:var(--amber);margin-top:6px;letter-spacing:.04em;
+  }
+
+  /* rail: the signature element. fills up as points get flagged. */
+  .rail{
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:20px;
+    position:sticky;
+    top:88px;
+  }
+  .rail h3{
+    font-family:var(--mono);font-size:.72rem;color:var(--ink-dim);
+    letter-spacing:.08em;font-weight:600;margin-bottom:14px;
+  }
+  .rail-empty{color:var(--ink-faint);font-size:.86rem;line-height:1.5;}
+  .rail-list{list-style:none;}
+  .rail-item{
+    display:flex;gap:10px;align-items:flex-start;
+    font-size:.86rem;color:var(--ink);
+    padding:10px 0;border-top:1px solid var(--line);
+    animation:none;
+  }
+  .rail-item:first-child{border-top:none;}
+  .rail-dot{
+    flex:0 0 auto;width:7px;height:7px;border-radius:50%;
+    background:var(--amber);margin-top:6px;
+  }
+
+  /* ---------- how it works ---------- */
+  .keymap{
+    display:grid;grid-template-columns:1fr;gap:0;
+    border-top:1px solid var(--line);
+  }
+  .keymap-row{
+    display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:center;
+    padding:16px 0;border-bottom:1px solid var(--line);
+  }
+  .keys{display:flex;gap:6px;flex-wrap:wrap;}
+  .key{
+    font-family:var(--mono);font-size:.78rem;color:var(--ink);
+    border:1px solid var(--ink-faint);border-bottom-width:2px;
+    border-radius:5px;padding:5px 9px;white-space:nowrap;
+  }
+  .keymap-row p{color:var(--ink-dim);font-size:.94rem;}
+
+  .word-demo-box{
+    margin-top:36px;border:1px dashed var(--ink-faint);border-radius:8px;padding:24px;
+  }
+  .word-demo-label{font-family:var(--mono);font-size:.72rem;color:var(--amber);margin-bottom:14px;display:block;}
+  #word-demo{font-size:1.15rem;line-height:1.6;cursor:pointer;}
+  #word-demo .word{transition:background-color .12s ease,color .12s ease;border-radius:3px;padding:0 1px;}
+  #word-demo:hover .word:hover{background:var(--amber-wash);}
+  #word-demo.flagged{color:var(--amber);}
+  #word-demo.flagged .word{background:var(--amber-wash-strong);color:var(--amber);}
+  .word-demo-hint{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint);margin-top:12px;}
+  #word-demo.flagged ~ .word-demo-hint{display:none;}
+
+  /* ---------- fact-check demo ---------- */
+  .fc-panel{
+    border:1px solid var(--line);border-radius:8px;padding:clamp(20px,4vw,32px);
+  }
+  .fc-claim{font-size:1.1rem;margin-bottom:20px;}
+  .fc-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px;}
+  .fc-run-btn{
+    font-family:var(--mono);font-size:.82rem;
+    border:1px solid var(--amber);color:var(--amber);
+    border-radius:5px;padding:9px 16px;
+  }
+  .fc-run-btn:hover{background:var(--amber-wash);}
+  .fc-run-btn:disabled{opacity:.5;cursor:default;}
+  .fc-status{font-family:var(--mono);font-size:.76rem;color:var(--ink-dim);min-height:1.2em;}
+  .fc-result{border-top:1px solid var(--line);padding-top:16px;margin-top:4px;}
+  .fc-result + .fc-result{margin-top:16px;}
+  .fc-result-tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:var(--ink-dim);display:block;margin-bottom:6px;}
+  .fc-result.deep .fc-result-tag{color:var(--amber);}
+  .fc-result p{font-size:.96rem;color:var(--ink);}
+  .fc-result.deep{background:var(--amber-wash);border:1px solid rgba(255,184,77,.35);border-radius:6px;padding:16px;margin-top:16px;border-top:1px solid rgba(255,184,77,.35);}
+  .fc-warn{color:var(--amber);font-weight:600;}
+
+  /* ---------- timeline ---------- */
+  .timeline{margin-top:8px;}
+  .tl-track{
+    position:relative;height:44px;border-bottom:1px solid var(--line);
+    display:flex;align-items:flex-end;
+  }
+  .tl-tick{
+    position:relative;flex:1 1 0;height:100%;display:flex;align-items:flex-end;justify-content:center;
+    border-left:1px solid var(--line);
+  }
+  .tl-tick:last-child{border-right:1px solid var(--line);}
+  .tl-tick::before{
+    content:"";width:1px;height:10px;background:var(--ink-faint);margin-bottom:0;
+  }
+  .tl-tick span{
+    position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:.68rem;color:var(--ink-faint);white-space:nowrap;
+  }
+  .tl-tick.active{background:var(--amber-wash);}
+  .tl-tick.active::before{background:var(--amber);height:18px;}
+  .tl-readout{
+    margin-top:40px;font-family:var(--mono);font-size:.82rem;color:var(--amber);min-height:1.2em;
+  }
+
+  /* ---------- local manifesto ---------- */
+  .manifesto{font-family:var(--mono);font-size:1.05rem;line-height:2.1;color:var(--ink);}
+  .manifesto .caret{color:var(--amber);opacity:1;}
+  @media (prefers-reduced-motion:no-preference){
+    .manifesto .caret{animation:blink 1.1s steps(1) infinite;}
+  }
+  @keyframes blink{0%,49%{opacity:1;}50%,100%{opacity:0;}}
+
+  /* ---------- run ---------- */
+  .terminal{
+    background:#050505;border:1px solid var(--line);border-radius:8px;
+    padding:20px 22px;font-family:var(--mono);font-size:.9rem;overflow-x:auto;
+  }
+  .terminal .p{color:var(--ink-faint);}
+  .terminal .out{color:var(--ink-dim);}
+  .run-note{margin-top:18px;color:var(--ink-dim);font-size:.92rem;}
+
+  .v01{
+    border:1px solid rgba(255,184,77,.35);border-radius:8px;
+    padding:20px 22px;background:var(--amber-wash);margin-top:40px;
+  }
+  .v01 .eyebrow{margin-bottom:8px;}
+  .v01 p{color:var(--ink);font-size:.96rem;}
+
+  footer{border-top:1px solid var(--line);padding:40px 0 56px;}
+  .footer-inner{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:baseline;}
+  .footer-ethos{color:var(--ink-dim);font-size:.9rem;}
+
+  .hero-anim{opacity:1;}
+  @media (prefers-reduced-motion:no-preference){
+    .hero-anim{animation:fadeUp .7s ease both;}
+    .hero-anim.d2{animation-delay:.08s;}
+    .hero-anim.d3{animation-delay:.16s;}
+  }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:860px){
+    .transcript-grid{grid-template-columns:1fr;gap:32px;}
+    .rail{position:static;}
+    .line{max-width:88%;}
+    .keymap-row{grid-template-columns:1fr;gap:8px;}
+  }
+  @media (max-width:520px){
+    .line{max-width:94%;font-size:1rem;}
+    .tl-tick span{font-size:.6rem;}
+    .fc-controls{flex-direction:column;align-items:flex-start;}
+    .topbar-tag{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="mark" href="/talkweave/" aria-label="talkweave">
+      <svg class="mark-weave" viewBox="0 0 44 20" width="44" height="20" aria-hidden="true" focusable="false">
+        <!-- two voices, drawn as threads that cross and leave as one line -->
+        <path class="thread thread-a" d="M1 6 C 9 6, 11 14, 19 14 S 29 6, 43 10"/>
+        <path class="thread thread-b" d="M1 14 C 9 14, 11 6, 19 6 S 29 14, 43 10"/>
+        <circle class="thread-seed" cx="43" cy="10" r="1.9"/>
+      </svg>
+      <span class="mark-word">talkweave</span>
+    </a>
+    <span class="topbar-tag">augment the conversation. never interfere.</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HERO: the pitch, delivered as the transcript it describes ============ -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-top hero-anim">
+        <h1 class="hero-title">a black screen. a growing transcript. one key that means <span class="amber">don't let me lose that.</span></h1>
+        <p class="hero-sub">talkweave sits on the table between two people talking. it never talks back. this is what it looks like, playing out below, right now.</p>
+      </div>
+
+      <div class="transcript-grid">
+        <div class="transcript hero-anim d2">
+          <p class="t-timestamp">0:00 &middot; live</p>
+
+          <div class="line left">
+            <span class="who">left</span>
+            okay so what is this thing actually
+          </div>
+
+          <div class="line right">
+            <span class="who">right</span>
+            a transcript that grows in the middle of a black screen. your words go left, mine go right. that's all you see.
+          </div>
+
+          <div class="line left">
+            <span class="who">left</span>
+            and while I'm talking, if you make a point I want to come back to&hellip;
+          </div>
+
+          <div class="line right">
+            <span class="who">right</span>
+            <span data-flaggable data-flag-text="one key lights the point amber and drops it in my sidebar, so it waits there until it's my turn to talk.">
+              one key lights the point amber and drops it in my sidebar, so it waits there until it's my turn to talk.
+              <span class="hint">&#8618; click this line to flag it</span>
+            </span>
+          </div>
+
+          <div class="line left">
+            <span class="who">left</span>
+            so nothing gets lost between my sentence and your reply.
+          </div>
+
+          <div class="line right">
+            <span class="who">right</span>
+            <span data-flaggable data-flag-text="that's the whole point. augment the conversation, never interfere with it.">
+              that's the whole point. augment the conversation, never interfere with it.
+              <span class="hint">&#8618; click this line to flag it</span>
+            </span>
+          </div>
+        </div>
+
+        <aside class="rail hero-anim d3">
+          <h3>flagged so far</h3>
+          <p class="rail-empty" id="rail-empty">nothing yet. click an amber-hinted line in the transcript.</p>
+          <ul class="rail-list" id="rail-list"></ul>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ THE HOW: the gesture ============ -->
+  <section class="how">
+    <div class="wrap">
+      <span class="eyebrow">the gesture</span>
+      <h2>flagging takes one key. it never stops the conversation to do it.</h2>
+      <p class="lede">while the other person talks, you flag. while you talk, they flag. by the time either of you gets a turn, the point is already sitting there, exact, amber, waiting.</p>
+
+      <div class="keymap">
+        <div class="keymap-row">
+          <div class="keys"><span class="key">&larr;</span><span class="key">&rarr;</span></div>
+          <p>who is speaking right now</p>
+        </div>
+        <div class="keymap-row">
+          <div class="keys"><span class="key">left shift</span><span class="key">right shift</span></div>
+          <p>left shift flags a point for the left person, right shift for the right, pressed alone</p>
+        </div>
+        <div class="keymap-row">
+          <div class="keys"><span class="key">space</span></div>
+          <p>the listener flags whatever was just said</p>
+        </div>
+        <div class="keymap-row">
+          <div class="keys"><span class="key">double-click a word</span></div>
+          <p>flag that exact claim, nothing more, nothing less</p>
+        </div>
+        <div class="keymap-row">
+          <div class="keys"><span class="key">F</span></div>
+          <p>fact-check the flagged point, locally</p>
+        </div>
+      </div>
+
+      <div class="word-demo-box">
+        <span class="word-demo-label">try the last one</span>
+        <p id="word-demo" data-flaggable-word tabindex="0" role="button" aria-label="double-click to flag this claim">
+          <span class="word">remote</span> <span class="word">work</span> <span class="word">cut</span> <span class="word">commercial</span> <span class="word">real</span> <span class="word">estate</span> <span class="word">demand</span> <span class="word">by</span> <span class="word">half</span><span class="word">.</span>
+        </p>
+        <span class="word-demo-hint">double-click any word above. in the app, this is exactly how a claim gets flagged mid-sentence, without breaking your flow.</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ FACT-CHECK DEMO ============ -->
+  <section class="factcheck">
+    <div class="wrap">
+      <span class="eyebrow">the fact-check</span>
+      <h2>quick answer in seconds. a deeper model keeps digging behind it.</h2>
+      <p class="lede">press F on a flagged point and a small local model answers first. a slower, more careful model keeps working after that, with an eta, and it says so plainly if the two disagree.</p>
+
+      <div class="fc-panel">
+        <p class="fc-claim">flagged claim: &ldquo;the policy passed in 2020.&rdquo;</p>
+        <div class="fc-controls">
+          <button class="fc-run-btn" id="fc-run" type="button">run fact-check &nbsp;<span style="opacity:.6">(F)</span></button>
+          <span class="fc-status" id="fc-status"></span>
+        </div>
+
+        <div class="fc-result" id="fc-quick" hidden>
+          <span class="fc-result-tag">quick model &middot; 1.4s</span>
+          <p>partially true. the underlying bill passed in 2019. an amendment in 2020 changed its funding terms.</p>
+        </div>
+
+        <div class="fc-result deep" id="fc-deep" hidden>
+          <span class="fc-result-tag"><span class="fc-warn">&#9650; contradiction</span> &middot; deep model &middot; 4.1s</span>
+          <p>disagrees with the quick answer's date. the deep model finds the 2020 figure only in the amended version, never in the original bill. worth raising before the point stands unchallenged.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ TIMELINE ============ -->
+  <section class="timeline-section">
+    <div class="wrap">
+      <span class="eyebrow">the record</span>
+      <h2>every flagged point sits on a timeline you can walk back through.</h2>
+      <p class="lede">one-word notes next to a flag. a summary every fifteen minutes. and underneath all of it, an audio timeline you can click to jump back to the moment something was actually said. illustrative below, not a real recording.</p>
+
+      <div class="timeline">
+        <div class="tl-track" id="tl-track">
+          <button class="tl-tick" data-time="0:00" type="button" aria-label="jump to 0:00"><span>0:00</span></button>
+          <button class="tl-tick" data-time="3:40" type="button" aria-label="jump to 3:40"></button>
+          <button class="tl-tick active" data-time="7:15" type="button" aria-label="jump to 7:15"><span>7:15</span></button>
+          <button class="tl-tick" data-time="11:05" type="button" aria-label="jump to 11:05"></button>
+          <button class="tl-tick" data-time="15:00" type="button" aria-label="jump to 15:00"><span>15:00</span></button>
+          <button class="tl-tick" data-time="18:30" type="button" aria-label="jump to 18:30"></button>
+          <button class="tl-tick" data-time="22:50" type="button" aria-label="jump to 22:50"><span>22:50</span></button>
+        </div>
+        <p class="tl-readout" id="tl-readout">jumped to 7:15, right where the flag went amber</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ 100% LOCAL ============ -->
+  <section class="local">
+    <div class="wrap">
+      <span class="eyebrow">where it runs</span>
+      <h2>on your machine. only your machine.</h2>
+      <p class="manifesto">
+        no cloud.<br>
+        no account.<br>
+        no telemetry.<br>
+        works without any llm at all.<br>
+        ollama is optional, only for claim extraction and fact-check.<span class="caret">&#9615;</span>
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ RUN IT ============ -->
+  <section class="run">
+    <div class="wrap">
+      <span class="eyebrow">running it</span>
+      <h2>three commands. no build step you have to think about.</h2>
+
+      <div class="terminal">
+<span class="p">$</span> npm install &amp;&amp; npm run build &amp;&amp; node server/server.mjs<br>
+<span class="out">&rarr; http://127.0.0.1:8990</span>
+      </div>
+      <p class="run-note">ollama is optional. install it and pull a small and a larger model to turn on claim extraction and fact-check. everything else, the transcript, flagging, notes, summaries, the audio timeline, runs without it.</p>
+
+      <div class="v01">
+        <span class="eyebrow">honestly, right now</span>
+        <p>live transcription shipped: it runs against a local qwen3-asr model, not whisper, with the first word on screen in about 1.4 seconds, measured, while you're still speaking. the flagging, the sidebars, the fact-check and the timeline are real and working today, alongside it.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <a class="mark" href="/talkweave/" aria-label="talkweave">
+      <svg class="mark-weave" viewBox="0 0 44 20" width="44" height="20" aria-hidden="true" focusable="false">
+        <!-- two voices, drawn as threads that cross and leave as one line -->
+        <path class="thread thread-a" d="M1 6 C 9 6, 11 14, 19 14 S 29 6, 43 10"/>
+        <path class="thread thread-b" d="M1 14 C 9 14, 11 6, 19 6 S 29 14, 43 10"/>
+        <circle class="thread-seed" cx="43" cy="10" r="1.9"/>
+      </svg>
+      <span class="mark-word">talkweave</span>
+    </a>
+    <span class="footer-ethos">built to sit between two people and disappear.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var railList = document.getElementById('rail-list');
+  var railEmpty = document.getElementById('rail-empty');
+  var flaggedIds = 0;
+
+  function addToRail(text) {
+    flaggedIds += 1;
+    if (railEmpty) { railEmpty.style.display = 'none'; }
+    var li = document.createElement('li');
+    li.className = 'rail-item';
+    var dot = document.createElement('span');
+    dot.className = 'rail-dot';
+    dot.setAttribute('aria-hidden', 'true');
+    var span = document.createElement('span');
+    span.textContent = text;
+    li.appendChild(dot);
+    li.appendChild(span);
+    railList.appendChild(li);
+  }
+
+  function flagEl(el) {
+    if (el.classList.contains('flagged')) { return; }
+    el.classList.add('flagged');
+    var text = el.getAttribute('data-flag-text') || el.textContent.trim();
+    addToRail(text);
+  }
+
+  var flaggables = document.querySelectorAll('[data-flaggable]');
+  for (var i = 0; i < flaggables.length; i++) {
+    (function (el) {
+      el.addEventListener('click', function () { flagEl(el); });
+    })(flaggables[i]);
+  }
+
+  var wordDemo = document.getElementById('word-demo');
+  if (wordDemo) {
+    wordDemo.setAttribute('data-flag-text', 'remote work cut commercial real estate demand by half.');
+    wordDemo.addEventListener('dblclick', function () { flagEl(wordDemo); });
+    wordDemo.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        flagEl(wordDemo);
+      }
+    });
+  }
+
+  var fcButton = document.getElementById('fc-run');
+  var fcQuick = document.getElementById('fc-quick');
+  var fcDeep = document.getElementById('fc-deep');
+  var fcStatus = document.getElementById('fc-status');
+  if (fcButton) {
+    fcButton.addEventListener('click', function () {
+      fcButton.disabled = true;
+      fcQuick.hidden = true;
+      fcDeep.hidden = true;
+      fcStatus.textContent = 'checking, quick model first...';
+      setTimeout(function () {
+        fcQuick.hidden = false;
+        fcStatus.textContent = 'deep model still digging, about 3s left';
+      }, 500);
+      setTimeout(function () {
+        fcDeep.hidden = false;
+        fcStatus.textContent = 'done';
+        fcButton.disabled = false;
+      }, 2600);
+    });
+  }
+
+  var ticks = document.querySelectorAll('.tl-tick');
+  var tlReadout = document.getElementById('tl-readout');
+  for (var j = 0; j < ticks.length; j++) {
+    (function (t) {
+      t.addEventListener('click', function () {
+        for (var k = 0; k < ticks.length; k++) { ticks[k].classList.remove('active'); }
+        t.classList.add('active');
+        tlReadout.textContent = 'jumped to ' + t.getAttribute('data-time');
+      });
+    })(ticks[j]);
+  }
+}());
+</script>
+
+</body>
+</html>

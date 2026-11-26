@@ -1,0 +1,10 @@
+node_modules/
+dist/
+sessions/
+*.log
+.DS_Store
+
+# desktop/ (Tauri v2 shell) — build artifacts and generated schemas only;
+# desktop/src-tauri/src, Cargo.toml, tauri.conf.json etc. stay tracked.
+desktop/src-tauri/target/
+desktop/src-tauri/gen/schemas/

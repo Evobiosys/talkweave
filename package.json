@@ -1,0 +1,28 @@
+{
+  "name": "talkweave",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "description": "Real-time conversation augmentation tool, local-only, black-shell UI, flagging + fact-checking over a live transcript.",
+  "scripts": {
+    "dev:server": "node server/server.mjs",
+    "dev:app": "vite",
+    "dev": "echo 'Run in two terminals: npm run dev:server  |  npm run dev:app'",
+    "build": "vite build",
+    "test": "vitest run",
+    "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.server.json",
+    "verify": "node scripts/headless_verify.mjs",
+    "verify:mic": "node scripts/headless_verify_mic.mjs"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "4.0.4",
+    "@tsconfig/svelte": "5.0.8",
+    "@types/node": "26.2.0",
+    "svelte": "5.56.9",
+    "svelte-check": "4.7.6",
+    "typescript": "5.9.3",
+    "vite": "5.4.21",
+    "vitest": "2.1.9"
+  }
+}

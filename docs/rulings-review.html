@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TalkWeave rulings review</title>
+<style>
+  :root{--bg:#0a0a0a;--ink:#e8e8e4;--dim:#8a8a86;--faint:#5a5a56;--line:#232320;--amber:#ffb84d;--yellow:#ffd93d;--red:#ff6b6b;--green:#7fc4a0}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:3rem 1.2rem 6rem}
+  main{max-width:880px;margin:0 auto}
+  header{max-width:880px;margin:0 auto 2.4rem}
+  h1{font-size:1.7rem;font-weight:650;letter-spacing:-.01em}
+  .sub{color:var(--dim);margin-top:.4rem;max-width:60ch}
+  h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.14em;color:var(--faint);margin:3rem 0 1rem;border-bottom:1px solid var(--line);padding-bottom:.5rem}
+  .card{border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;margin-bottom:.9rem;background:#0e0e0d}
+  .card summary{cursor:pointer;list-style:none;display:flex;gap:.7rem;align-items:baseline}
+  .card summary::-webkit-details-marker{display:none}
+  .num{color:var(--faint);font-variant-numeric:tabular-nums;min-width:2ch}
+  .decision{font-weight:600}
+  .chip{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;padding:.1rem .5rem;border-radius:1rem;border:1px solid;margin-left:auto;white-space:nowrap;align-self:center}
+  .chip.fine{color:var(--green);border-color:var(--green)}
+  .chip.ask{color:var(--yellow);border-color:var(--yellow)}
+  .chip.blocked{color:var(--red);border-color:var(--red)}
+  .body{margin-top:.9rem;padding-top:.8rem;border-top:1px dashed var(--line);display:grid;gap:.55rem}
+  .row{display:grid;grid-template-columns:7.5rem 1fr;gap:.8rem}
+  .row b{color:var(--faint);font-weight:500;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;padding-top:.15rem}
+  .alt{color:var(--dim)}
+  .cost{color:var(--dim)}
+  .picked{color:var(--ink)}
+  .open .decision{color:var(--yellow)}
+  .opt{padding:.45rem .7rem;border:1px solid var(--line);border-radius:7px;margin:.25rem 0;color:var(--dim)}
+  .opt b{color:var(--ink);font-weight:600}
+  .foot{color:var(--faint);font-size:.8rem;margin-top:3rem;border-top:1px solid var(--line);padding-top:1rem}
+  code{background:#161614;padding:.08em .35em;border-radius:4px;font-size:.86em}
+  @media(max-width:560px){.row{grid-template-columns:1fr}.row b{padding-top:0}}
+</style>
+</head>
+<body>
+<header>
+  <h1>TalkWeave v0.1, the 22 rulings</h1>
+  <p class="sub">Every decision made on your behalf during the build, each with the alternative not taken and what it costs to reverse. Click a ruling to expand. Green chip = safe default, yellow = worth your eyes. The three open threads sit at the bottom.</p>
+</header>
+<main>
+
+<h2>Process and scaffolding</h2>
+
+<details class="card"><summary><span class="num">1</span><span class="decision">Plan authored straight from your voice note, no brainstorming session</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">You invoked SDD directly with the transcript and "time to use up tokens", so I treated the transcript as the spec and wrote the 11-task plan myself.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Pause for an interactive brainstorming round before building.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">v0.1 scope could misread intent; mitigated by deferring all ambiguous hardware ideas to v2. You have since used the tool and liked it.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">2</span><span class="decision">Proceeded without the advisor tool</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">The advisor tool was not present in the session toolset, so the advisor-first rule could not be followed.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">None available.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">None.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">3</span><span class="decision">Named it talkweave, born in SS/code/other</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Working name talkweave (organic weave metaphor), initial home in the standard new-repo location.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Ask you for a name and home first.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">A rename or move, which already happened: you renamed the session TalkWeave and asked for the move to the EvoBioSys PROJECTS tree. Done.</span></div>
+</div></details>
+
+<h2>Interaction design</h2>
+
+<details class="card"><summary><span class="num">4</span><span class="decision">Key map: Arrows = speaker, Shifts alone = flags, Space = listener, double-click = claim</span><span class="chip ask">worth a look</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Your spec named three different schemes across the recording (Fn + ArrowRight, then left vs right Shift, then spacebar for both). Resolved: ArrowLeft/ArrowRight set who is speaking, left/right Shift pressed alone flag for that side, Space flags for the listener, double-click flags the exact claim, F fact-checks, comma opens settings.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Fn-based mapping (impossible: browsers cannot see the Fn key) or spacebar-for-both (needs reliable turn-taking detection, which you yourself called not straightforward).</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">A remap is a one-file change in <code>keymap.ts</code>. Try the current scheme in a real conversation first.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">18</span><span class="decision">"one word" culture removed entirely, input shows only a dim ellipsis</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Your feedback "remove one word, just indicate being able to write" was read as: delete the placeholder AND the "one word keeps it light" nudge; the input now shows a dim "…" with a subtle underline.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Keep the one-word hint mechanism and only shorten the placeholder.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Copy tweak, minutes.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">19</span><span class="decision">"listening…" and "loading sessions…" kept</span><span class="chip ask">worth a look</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Your "do not say nothing yet" rule was applied to empty-state placeholders; these two are live-status indicators, not "no data" copy, so they stayed.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Globally empty means empty: delete these two strings as well.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Two strings to delete.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">22</span><span class="decision">Comma-unpin closes the top bar instantly, no 300ms grace</span><span class="chip ask">your preference</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">An explicit key press reads as intent, so unpinning retreats immediately; only pointer-leave gets the 300ms grace.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Grace on every close path, including unpin.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">One constant. The reviewer explicitly flagged this as a Jakob-preference question.</span></div>
+</div></details>
+
+<h2>Architecture</h2>
+
+<details class="card"><summary><span class="num">6</span><span class="decision">No live transcription in v0.1, engine interface for v0.2</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">No whisper binary was installed and subagents must not install software. v0.1 ships a replay demo engine plus real audio recording; live engines plug into <code>shared/engine.ts</code> in v0.2.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Block the build on a whisper install, or ship a half-tested streaming pipeline.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Demo-only realtime for now; the v0.2 handover doc carries the engine decision (see open threads).</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">7</span><span class="decision">Sessions persist as human-readable markdown files</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">One .md per session as the source of truth (your markdown-over-databases standing preference), round-trip guarded by a tested parser.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">SQLite or JSON store: faster to query, opaque to read and grep.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Format migration later; two known rare escaping edge cases are queued for a v0.2 hardening pass.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">8</span><span class="decision">@types/node allowed as a dev dependency</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Plan amended so the server code gets a real type net; the original whitelist made its own type-check requirement impossible.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Leave server .mjs unchecked by the compiler.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">One dev-only package, zero runtime surface.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">9</span><span class="decision">Markdown format extended beyond the plan sample</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Session-id header and a few tokens (interim, eta, summary ids) added so every model field survives save and reload; the plan sample was illustrative, the type definitions normative.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Follow the sample literally and silently lose fields on round-trip.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">A few extra tokens per file; the parser ignores unknown lines anyway.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">10</span><span class="decision">Persistence trio: no autosave on speaker switch, collision-safe session ids, contract-tested duplicate parser</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Speaker switching marks state dirty without a disk write; same-second session creation retries instead of clobbering; the server's hand-rolled markdown code is pinned to the shared TypeScript module by contract tests.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Save on every keystroke-level event; trust timestamps to be unique; trust two parsers to stay in sync by discipline.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Minor churn; the contract test already caught one real divergence (newline escaping) during review.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">11</span><span class="decision">Seek contract is a callback prop, not a DOM CustomEvent</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Svelte 5 deprecates the event-dispatcher idiom; <code>onseek(t)</code> callback props are the current convention. Plan amended to match.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Bubbling CustomEvents as the plan originally said.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Mechanical swap in one component.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">12</span><span class="decision">HTTP Range support required on audio, reversing the plan's own waiver</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Empirical test showed clicking 85% across the timeline landed at 0.24 seconds without Range support; the plan's "not required" line was a defect. After the fix the same click landed with a 0.00s delta.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Client-side workarounds around broken seeking.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">About 30 well-tested server lines. None in practice.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">13</span><span class="decision">Autosave got a 10-second max-wait ceiling mid-build</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Continuous transcript ticks starved the 2s debounce so demo sessions never saved until the end; fixed immediately rather than deferring a data-persistence bug.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Defer to the final review pile.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Slightly chattier disk writes.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">14</span><span class="decision">Replay engine is demo-only, live sessions record without a transcript</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Review caught live sessions silently running the scripted demo transcript over your real recording. Ruled: replay belongs to the demo button only; a live session in v0.1 records audio, takes flags and notes, and honestly shows no machine transcript.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Keep the scripted transcript playing during live conversations (misleading) or block live mode entirely.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">None; this is the honest v0.1 shape until live transcription lands.</span></div>
+</div></details>
+
+<h2>AI behavior</h2>
+
+<details class="card"><summary><span class="num">15</span><span class="decision">AI claim extraction never touches double-clicked flags</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">A double-click is your exact selection; review found the LLM was overwriting it with a guess from the wrong segment. Only key-created flags (which have no span yet) go through claim extraction.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Let the model refine manual selections too.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">A gating flag; could later become a setting.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">16</span><span class="decision">Ollama base URL overridable via env var, default stays local</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked"><code>TALKWEAVE_OLLAMA_BASE_URL</code> exists so tests can stub the model server; without it the required end-to-end tests were impossible. Default remains 127.0.0.1:11434.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Hardcode the URL and skip stub-based end-to-end testing.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">In principle the env var could point LLM traffic elsewhere; acceptable on a single-user local tool, and nothing sets it by default.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">17</span><span class="decision">Fact-checks persist at dispatch; the "keep" pin is session-ephemeral</span><span class="chip ask">worth a look</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Every fact-check lands in the session file when dispatched (so timeline markers always work); pressing keep pins it into the sidebar for the running session only.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Persist a kept flag in the file format so pins survive reload (requires a format field).</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Reopening an old session shows its fact-checks unpinned. Queued as a v0.1.1 decision in the polish handover.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">21</span><span class="decision">Final fix wave kept to three items, save-failure chip deferred</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Merged fixes: review-mode timestamps, one stale docstring, debug line removal. The "server down, no visual warning while saving fails" item went to the v0.1.1 handover instead.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Bigger final wave touching autosave error paths right before merge.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">Until v0.1.1: if the local server dies mid-session, saving fails silently. Local-only, low likelihood.</span></div>
+</div></details>
+
+<h2>Scope honesty</h2>
+
+<details class="card"><summary><span class="num">5</span><span class="decision">"Sense" integration deferred, system unidentified</span><span class="chip blocked">needs you</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">Your spec said fact-checking "should also connect with Sense". No system by that name exists in your repos, notes, or memory files, so nothing was built.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Guess at a product called Sense and integrate blindly.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">A missing integration until you name it. See open thread below.</span></div>
+</div></details>
+
+<details class="card"><summary><span class="num">20</span><span class="decision">FreeFlow honestly reported as NOT the underlying tech</span><span class="chip fine">fine</span></summary>
+<div class="body">
+  <div class="row"><b>Picked</b><span class="picked">You asked me to confirm FreeFlow is the base; it is not (Svelte + Node from scratch), and confirming falsely would have poisoned later decisions. Your FreeFlow fork is a strong candidate for the v0.2 mic engine.</span></div>
+  <div class="row"><b>Alternative</b><span class="alt">Nod along.</span></div>
+  <div class="row"><b>Cost if wrong</b><span class="cost">None; the truth was cheaper.</span></div>
+</div></details>
+
+<h2>Open threads, your call</h2>
+
+<div class="card open"><details><summary><span class="num">A</span><span class="decision">What is "Sense"?</span><span class="chip blocked">needs you</span></summary>
+<div class="body">
+  <div class="row"><b>Question</b><span>Which system did you mean when the spec said fact-checking should connect with Sense? A note tool, a sensor platform, a product, a working title of your own?</span></div>
+  <div class="row"><b>Then</b><span class="alt">One sentence from you unblocks the <code>DEVLOG/sense-integration</code> handover.</span></div>
+</div></details></div>
+
+<div class="card open"><details><summary><span class="num">B</span><span class="decision">v0.2 live-transcription engine</span><span class="chip ask">decide</span></summary>
+<div class="body">
+  <div class="opt"><b>whisper.cpp streaming</b> — proven local ASR, needs <code>brew1 install whisper-cpp</code>, server-side adapter; strong accuracy, no diarization built in.</div>
+  <div class="opt"><b>Your FreeFlow fork</b> — ruled out on inspection: its TranscriptionService defaults to Groq's cloud API and the realtime path opens a cloud WebSocket, both breaking the local-only constraint. Salvageable only with a substantial local-backend rewrite.</div>
+  <div class="opt"><b>macOS SFSpeechRecognizer</b> — on-device, zero installs, needs a small Swift helper; Apple's recognizer, quality varies by language.</div>
+  <div class="row"><b>Then</b><span class="alt">The <code>DEVLOG/v02-live-transcription</code> handover carries the full comparison and implementation plan for whichever you pick.</span></div>
+</div></details></div>
+
+<div class="card open"><details><summary><span class="num">C</span><span class="decision">v0.1.1 polish list</span><span class="chip ask">approve scope</span></summary>
+<div class="body">
+  <div class="opt"><b>Save-failure chip</b> — surface a "not saving" indicator when the local server stops answering, instead of silent failure.</div>
+  <div class="opt"><b>Kept-pin persistence</b> — decide ruling 17's alternative: persist kept fact-checks across reloads, or accept the ephemeral pin.</div>
+  <div class="opt"><b>Comma-unpin grace</b> — ruling 22: instant close vs 300ms grace, your feel preference.</div>
+  <div class="opt"><b>Smaller items</b> — tests folder type-checking, settings number-input clamping, top-bar timer churn.</div>
+  <div class="row"><b>Then</b><span class="alt">All specced in <code>DEVLOG/v011-polish_of-talkweave_handover.md</code>, one session can run the wave.</span></div>
+</div></details></div>
+
+<p class="foot">TalkWeave v0.1 · built 2026-08-22 · 485 tests green · repo: SingularStructure/PROJECTS/evobiosys/PROJECTS/evobioSYS-sys/PROJECTS/TalkWeave · run: <code>node server/server.mjs</code> then 127.0.0.1:8990 · landing: idea2.site/talkweave</p>
+</main>
+
+<!-- Artifact seen-state badge -->
+<style>
+  #seen-chip{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;
+    letter-spacing:.06em;text-transform:uppercase;padding:.2rem .55rem;border-radius:1rem;
+    border:1px solid currentColor;margin-bottom:.6rem;opacity:0}
+  #seen-chip[data-state]{opacity:1;transition:opacity .25s ease}
+  #seen-chip[data-state="new"]{color:#1d7a52;background:rgba(29,122,82,.08)}
+  #seen-chip[data-state="seen"]{color:#8b938d;background:transparent;font-weight:400}
+  @media (prefers-color-scheme:dark){
+    #seen-chip[data-state="new"]{color:#7fc4a0;background:rgba(127,196,160,.1)}
+    #seen-chip[data-state="seen"]{color:#727b76}
+  }
+  html[data-seen="1"] body{filter:saturate(.72) contrast(.96)}
+  html[data-seen="1"] h1{opacity:.82}
+</style>
+<script>
+(function () {
+  var key = 'artifact-seen:' + location.pathname;
+  var chip = document.createElement('div');
+  chip.id = 'seen-chip';
+  var prior = null;
+  try { prior = localStorage.getItem(key); } catch (e) {}
+
+  if (prior) {
+    document.documentElement.setAttribute('data-seen', '1');
+    chip.setAttribute('data-state', 'seen');
+    chip.textContent = 'opened ' + new Date(Number(prior)).toLocaleDateString();
+  } else {
+    chip.setAttribute('data-state', 'new');
+    chip.textContent = 'new — not opened before';
+  }
+  try { localStorage.setItem(key, String(Date.now())); } catch (e) {}
+
+  var host = document.querySelector('header') || document.body;
+  host.insertBefore(chip, host.firstChild);
+})();
+</script>
+</body>
+</html>

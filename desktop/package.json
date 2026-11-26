@@ -1,0 +1,14 @@
+{
+  "name": "talkweave-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tauri v2 thin shell for TalkWeave: spawns the existing Node server, shows a window on it once healthy. No frontend/backend logic lives here.",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "tauri": "tauri",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4"
+  }
+}
