@@ -1,5 +1,9 @@
 # talkweave
 
+> Get the ready-made Mac app + personal support: https://trust-tech.app/talkweave.html.
+> Source stays open; building it yourself stays free.
+> What you pay for: the built app, updates and customer support.
+
 > Status: beta / early access. Licensed under AGPL-3.0-or-later. Want a dual licence under AMPL? Reach out.
 
 Talkweave augments a live two-person conversation without interfering. A transcript
